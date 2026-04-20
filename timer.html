@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>Edu Timer Pro</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  height: 100vh;
+  display: flex;
+
+  background: radial-gradient(circle at top, #eef2f7, #d9e2ec);
+}
+
+/* GLASS PANEL */
+#panel {
+  width: 330px;
+
+  background: rgba(28, 28, 30, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  color: white;
+  padding: 22px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  box-shadow: 10px 0 30px rgba(0,0,0,0.25);
+
+  border-top-right-radius: 22px;
+  border-bottom-right-radius: 22px;
+
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* INPUT */
+input {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: none;
+  font-size: 15px;
+  outline: none;
+}
+
+/* BUTTONS */
+button {
+  padding: 12px;
+  border-radius: 16px;
+
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.07);
+  color: white;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+  font-weight: 500;
+}
+
+button:hover {
+  background: rgba(255,255,255,0.14);
+  transform: translateY(-2px);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* PRESETS */
+.presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.presets button {
+  flex: 1;
+  font-size: 12px;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+/* SCREEN */
+#screen {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* TIMER */
+.timerBox {
+  position: relative;
+  width: 340px;
+  height: 340px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  animation: popIn 0.7s ease;
+}
+
+/* ANIMATION */
+@keyframes popIn {
+  0% { transform: scale(0.85); opacity: 0; filter: blur(10px); }
+  100% { transform: scale(1); opacity: 1; filter: blur(0); }
+}
+
+/* SVG */
+svg {
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15));
+}
+
+circle {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+}
+
+.bg {
+  stroke: rgba(0,0,0,0.08);
+}
+
+.progress {
+  stroke: #0a84ff;
+  filter: drop-shadow(0 0 10px rgba(10,132,255,0.35));
+  transition: stroke-dashoffset 1s linear;
+}
+
+/* TIME */
+#time {
+  position: absolute;
+  font-size: 64px;
+  font-weight: 600;
+  color: #1c1c1e;
+  letter-spacing: 2px;
+}
+
+/* EXAM MODE */
+.exam {
+  background: radial-gradient(circle at center, #000, #050505);
+}
+
+.exam #time {
+  color: white;
+  text-shadow: 0 0 25px rgba(255,255,255,0.08);
+}
+
+/* GLOW BACKGROUND */
+#bgGlow {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center,
+    rgba(10,132,255,0.18),
+    transparent 60%);
+  pointer-events: none;
+  filter: blur(60px);
+}
+.back-home {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(10px);
+
+  padding: 10px 14px;
+  border-radius: 12px;
+
+  text-decoration: none;
+  font-family: Poppins, sans-serif;
+  font-size: 14px;
+
+  color: #111;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+
+  transition: 0.2s ease;
+  z-index: 9999;
+}
+
+.back-home:hover {
+  transform: translateY(-2px);
+  background: white;
+}
+</style>
+</head>
+
+<body>
+
+<div id="bgGlow"></div>
+
+<div id="panel">
+
+  <h2>⏱ Edu Timer Pro</h2>
+
+  <input id="minutes" type="number" placeholder="Minute" value="5">
+
+  <div class="presets">
+    <button onclick="preset(1)">1m</button>
+    <button onclick="preset(5)">5m</button>
+    <button onclick="preset(10)">10m</button>
+  </div>
+
+  <div class="presets">
+    <button onclick="preset(25)">25m</button>
+    <button onclick="preset(30)">30m</button>
+    <button onclick="preset(40)">40m</button>
+    <button onclick="preset(45)">45m</button>
+  </div>
+
+  <button onclick="start()">Start</button>
+  <button onclick="pause()">Pause</button>
+  <button onclick="reset()">Reset</button>
+  <button onclick="toggleExam()">Exam Mode</button>
+
+</div>
+
+<div id="screen">
+
+  <div class="timerBox">
+
+    <svg width="320" height="320">
+      <circle class="bg" cx="160" cy="160" r="140"></circle>
+      <circle class="progress" cx="160" cy="160" r="140"></circle>
+    </svg>
+
+    <div id="time">05:00</div>
+
+  </div>
+
+</div>
+
+<audio id="beep" src="https://www.soundjay.com/button/beep-07.wav"></audio>
+
+<script src="timer.js"></script>
+
+</body>
+<a class="back-home" href="homepage.html">← Acasă</a>
+</html>

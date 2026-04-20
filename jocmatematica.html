@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>Pufi: Galactic Legend Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #020617;
+            font-family: 'Fredoka One', cursive;
+        }
+
+        canvas { display: block; }
+
+        /* MODAL SELECTARE MODURI - EXTRA TRANSPARENT & FONT SIMPLU */
+        #setup-screen {
+            position: fixed; inset: 0;
+            background: rgba(2, 6, 23, 0.3); /* Foarte transparent */
+            backdrop-filter: blur(8px);
+            z-index: 5000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; color: white;
+            font-family: sans-serif; /* Font simplu pentru meniu */
+        }
+        
+        #setup-screen h1 { 
+            font-weight: 300; 
+            font-size: 2.5rem; 
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        .modes-box {
+            background: rgba(255, 255, 255, 0.03); padding: 30px;
+            border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 40px;
+        }
+
+        .mode-label { 
+            display: flex; align-items: center; gap: 12px; 
+            font-size: 1.3rem; cursor: pointer; 
+            font-weight: 300; /* Subțire */
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .mode-label input { width: 20px; height: 20px; accent-color: #a855f7; }
+
+        .start-btn {
+            padding: 15px 60px; font-size: 1.5rem; border-radius: 40px; border: 1px solid rgba(168, 85, 247, 0.5);
+            background: rgba(168, 85, 247, 0.2); color: white; cursor: pointer; 
+            font-family: sans-serif; font-weight: 300;
+            transition: all 0.3s ease;
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        .start-btn:hover { background: rgba(168, 85, 247, 0.4); transform: scale(1.05); }
+
+        /* UI Glassmorphism (JOC) */
+        #ui-container {
+            position: absolute; bottom: 40px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 20px 60px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none; 
+            flex-direction: column; align-items: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+        }
+
+        #ui-container.correct-shake { animation: pulseGreen 0.5s ease; border-color: #4ade80; }
+        #ui-container.wrong-shake { animation: shakeRed 0.5s ease; border-color: #ef4444; }
+
+        @keyframes pulseGreen {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); background: rgba(74, 222, 128, 0.2); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+
+        @keyframes shakeRed {
+            0%, 100% { transform: translateX(-50%); }
+            20%, 60% { transform: translateX(-52%); background: rgba(239, 68, 68, 0.2); }
+            40%, 80% { transform: translateX(-48%); }
+        }
+
+        .math-display {
+            font-size: 3.5rem; color: white;
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+            margin-bottom: 10px;
+        }
+
+        input {
+            background: white; border: none; width: 140px;
+            padding: 12px; font-size: 2.5rem; border-radius: 20px;
+            text-align: center; font-family: 'Fredoka One', cursive;
+            color: #1e1b4b; outline: none; box-shadow: inset 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        #win-screen {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle at center, #6d28d9, #020617);
+            display: none; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: white; z-index: 2000;
+        }
+
+        .stats-top {
+            position: absolute; top: 20px; left: 20px;
+            color: white; font-size: 1.2rem; display: none; gap: 20px; z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+<div id="setup-screen">
+    <h1>Alege operațiile</h1>
+    <div class="modes-box">
+        <label class="mode-label"><input type="checkbox" class="op" value="+" checked> Adunări ➕</label>
+        <label class="mode-label"><input type="checkbox" class="op" value="-"> Scăderi ➖</label>
+        <label class="mode-label"><input type="checkbox" class="op" value="*"> Înmulțiri ✖️</label>
+        <label class="mode-label"><input type="checkbox" class="op" value="/"> Împărțiri ➗</label>
+    </div>
+    <button class="start-btn" onclick="startMission()">Pornește misiunea</button>
+</div>
+
+<div class="stats-top" id="stats-ui">
+    <div>🚀 Pasul: <span id="step-count">1</span> / 25</div>
+    <div>🔥 Combo: <span id="combo-count">0</span></div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="ui-container">
+    <div class="math-display" id="problem">...</div>
+    <input type="number" id="answer" placeholder="?">
+</div>
+
+<div id="win-screen">
+    <h1 style="font-size: 6rem; margin: 0; text-shadow: 0 0 50px #fbbf24; font-family: 'Fredoka One';">LEGENDA! 👑</h1>
+    <p style="font-size: 2rem; font-family: 'Fredoka One';">Pufi a salvat întreaga Matematică!</p>
+    <button onclick="location.reload()" style="padding: 20px 50px; font-size: 1.5rem; cursor: pointer; border-radius: 30px; border: none; background: #fbbf24; color: #000; font-family: 'Fredoka One'; margin-top: 20px;">REÎNCEPE MISIUNEA</button>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const answerInput = document.getElementById('answer');
+    const ui = document.getElementById('ui-container');
+
+    let width, height;
+    let currentStep = 0;
+    const totalSteps = 25;
+    let correctAnswer = 0;
+    let combo = 0;
+    let selectedOps = [];
+
+    const stars = [];
+    const particles = [];
+    const asteroids = [];
+    const nodes = [];
+    const pufi = { x: 0, y: 0, tx: 0, ty: 0, color: '#a855f7', rotation: 0 };
+
+    function startMission() {
+        const checks = document.querySelectorAll('.op:checked');
+        selectedOps = Array.from(checks).map(c => c.value);
+        if(selectedOps.length === 0) return alert("Selectați cel puțin o operație!");
+        
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('ui-container').style.display = 'flex';
+        document.getElementById('stats-ui').style.display = 'flex';
+        
+        generateProblem();
+        answerInput.focus();
+    }
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        initNodes();
+    }
+
+    function initStars() {
+        stars.length = 0;
+        for(let i=0; i<300; i++) {
+            stars.push({
+                x: Math.random() * 8000,
+                y: Math.random() * height,
+                size: Math.random() * 2,
+                opacity: Math.random()
+            });
+        }
+        asteroids.length = 0;
+        for(let i=0; i<15; i++) {
+            asteroids.push({
+                x: Math.random() * 8000,
+                y: Math.random() * height,
+                size: Math.random() * 30 + 10,
+                speed: Math.random() * 0.5 + 0.2,
+                rot: Math.random() * Math.PI * 2,
+                rotSpd: (Math.random() - 0.5) * 0.02
+            });
+        }
+    }
+
+    function initNodes() {
+        nodes.length = 0;
+        for(let i=0; i <= totalSteps; i++) {
+            nodes.push({
+                x: 200 + (i * 350),
+                y: height / 2 + Math.sin(i * 0.9) * 180,
+                glow: i === totalSteps ? '#fbbf24' : '#fff',
+                hue: i * 15
+            });
+        }
+        pufi.tx = nodes[currentStep].x; pufi.ty = nodes[currentStep].y;
+        pufi.x = pufi.tx; pufi.y = pufi.ty;
+    }
+
+    function generateProblem() {
+        if(selectedOps.length === 0) return;
+        const op = selectedOps[Math.floor(Math.random() * selectedOps.length)];
+        let n1, n2;
+
+        if(op === '+') {
+            n1 = Math.floor(Math.random() * 20) + 1; n2 = Math.floor(Math.random() * 20) + 1;
+            correctAnswer = n1 + n2; document.getElementById('problem').innerText = n1 + " + " + n2;
+        } else if(op === '-') {
+            n1 = Math.floor(Math.random() * 20) + 10; n2 = Math.floor(Math.random() * n1);
+            correctAnswer = n1 - n2; document.getElementById('problem').innerText = n1 + " - " + n2;
+        } else if(op === '*') {
+            n1 = Math.floor(Math.random() * 10) + 1; n2 = Math.floor(Math.random() * 10) + 1;
+            correctAnswer = n1 * n2; document.getElementById('problem').innerText = n1 + " × " + n2;
+        } else if(op === '/') {
+            n2 = Math.floor(Math.random() * 9) + 1; n1 = n2 * (Math.floor(Math.random() * 10) + 1);
+            correctAnswer = n1 / n2; document.getElementById('problem').innerText = n1 + " ÷ " + n2;
+        }
+
+        document.getElementById('step-count').innerText = currentStep + 1;
+        document.getElementById('combo-count').innerText = combo;
+    }
+
+    answerInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') {
+            const val = parseInt(answerInput.value);
+            if(val === correctAnswer) {
+                combo++;
+                ui.classList.add('correct-shake');
+                setTimeout(() => ui.classList.remove('correct-shake'), 500);
+                if(currentStep < totalSteps) currentStep++;
+                if(currentStep === totalSteps) document.getElementById('win-screen').style.display = 'flex';
+                for(let i=0; i<15; i++) createParticle(pufi.x, pufi.y, '#4ade80');
+            } else {
+                combo = 0;
+                ui.classList.add('wrong-shake');
+                setTimeout(() => ui.classList.remove('wrong-shake'), 500);
+                if(currentStep > 0) currentStep--;
+                for(let i=0; i<10; i++) createParticle(pufi.x, pufi.y, '#ef4444');
+            }
+            pufi.tx = nodes[currentStep].x;
+            pufi.ty = nodes[currentStep].y;
+            answerInput.value = '';
+            generateProblem();
+        }
+    });
+
+    function createParticle(x, y, color) {
+        particles.push({
+            x, y, color,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8,
+            life: 1.0,
+            size: Math.random() * 5 + 2
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, width, height);
+        const camX = pufi.x - width / 3;
+
+        ctx.save();
+        ctx.translate(-camX * 0.2, 0);
+        stars.forEach(s => {
+            ctx.fillStyle = "rgba(255,255,255," + s.opacity + ")";
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2); ctx.fill();
+        });
+        
+        asteroids.forEach(a => {
+            a.rot += a.rotSpd;
+            ctx.save();
+            ctx.translate(a.x, a.y); ctx.rotate(a.rot);
+            ctx.fillStyle = "#334155";
+            ctx.beginPath(); ctx.roundRect(-a.size/2, -a.size/2, a.size, a.size, 5); ctx.fill();
+            ctx.restore();
+        });
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(-camX, 0);
+
+        ctx.beginPath();
+        ctx.setLineDash([15, 15]);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        nodes.forEach((n, i) => {
+            if(i === 0) ctx.moveTo(n.x, n.y);
+            else ctx.lineTo(n.x, n.y);
+        });
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        nodes.forEach((n, i) => {
+            const isPassed = i <= currentStep;
+            const dist = Math.abs(i - currentStep);
+            if(dist < 5) {
+                ctx.save();
+                ctx.shadowBlur = isPassed ? 25 : 5;
+                ctx.shadowColor = "hsl(" + n.hue + ", 80%, 60%)";
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, isPassed ? 20 : 10, 0, Math.PI * 2);
+                ctx.fillStyle = isPassed ? "hsl(" + n.hue + ", 80%, 60%)" : '#1e293b';
+                ctx.fill();
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 2;
+                if(!isPassed) ctx.stroke();
+                ctx.restore();
+            }
+        });
+
+        if(Math.abs(pufi.tx - pufi.x) > 1) {
+            createParticle(pufi.x, pufi.y + 10, combo > 3 ? '#fbbf24' : '#a855f7');
+        }
+
+        particles.forEach((p, i) => {
+            p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+            ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+            if(p.life <= 0) particles.splice(i, 1);
+        });
+        ctx.globalAlpha = 1;
+
+        pufi.x += (pufi.tx - pufi.x) * 0.07;
+        pufi.y += (pufi.ty - pufi.y) * 0.07;
+        pufi.rotation = (pufi.tx - pufi.x) * 0.005;
+        const float = Math.sin(Date.now() / 150) * 12;
+
+        ctx.save();
+        ctx.translate(pufi.x, pufi.y + float);
+        ctx.rotate(pufi.rotation);
+        ctx.shadowBlur = combo > 3 ? 40 : 20;
+        ctx.shadowColor = combo > 3 ? '#fbbf24' : pufi.color;
+        ctx.fillStyle = combo > 3 ? '#fbbf24' : pufi.color;
+        ctx.beginPath(); ctx.roundRect(-30, -35, 60, 60, [25, 25, 10, 10]); ctx.fill();
+        ctx.fillStyle = 'white';
+        ctx.beginPath(); ctx.arc(-12, -10, 9, 0, Math.PI * 2); ctx.arc(12, -10, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'black';
+        ctx.beginPath(); ctx.arc(-12 + pufi.rotation*10, -10, 4, 0, Math.PI * 2); ctx.arc(12 + pufi.rotation*10, -10, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        ctx.restore();
+
+        requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', resize);
+    resize(); initStars(); draw(); 
+</script>
+
+</body>
+</html>

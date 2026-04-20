@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>PIGGY: Grădina Magică a Cuvintelor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink-pufi: #ffb7d5;
+            --pink-dark: #ff85b3;
+            --sky-top: #87ceeb;
+            --sky-bottom: #e0f7fa;
+            --grass-dark: #99d66b;
+            --text-color: #5d4037;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: var(--sky-top);
+            font-family: 'Quicksand', sans-serif;
+            text-transform: uppercase;
+        }
+
+        * { font-weight: 700; box-sizing: border-box; }
+
+        canvas { display: block; }
+
+        /* MENIU START MODERN */
+        #setup-screen {
+            position: fixed; inset: 0;
+            background: rgba(135, 206, 235, 0.3); 
+            backdrop-filter: blur(10px);
+            z-index: 5000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.95); padding: 50px; border-radius: 60px;
+            box-shadow: 0 30px 0 rgba(0,0,0,0.05), 0 10px 50px rgba(0,0,0,0.1);
+            border: 6px solid white;
+            text-align: center; width: 480px;
+        }
+
+        h1 { color: var(--pink-dark); margin-bottom: 30px; font-size: 2.4rem; text-shadow: 2px 2px 0 white; }
+
+        .start-btn {
+            padding: 22px 60px; font-size: 1.6rem; border-radius: 50px; border: none;
+            background: var(--pink-dark); color: white; cursor: pointer; 
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin-top: 20px;
+            font-family: 'Quicksand', sans-serif;
+            box-shadow: 0 8px 0 #d64a7f;
+        }
+        .start-btn:hover { transform: scale(1.05) translateY(-2px); background: #f472b6; }
+        .start-btn:active { transform: translateY(6px); box-shadow: 0 2px 0 #d64a7f; }
+
+        /* NAVIGARE */
+        #top-ui-left {
+            position: absolute; top: 25px; left: 25px;
+            display: flex; gap: 20px; z-index: 200;
+        }
+
+        .ui-pill {
+            background: white; border: 4px solid var(--pink-pufi);
+            padding: 14px 28px; border-radius: 35px;
+            color: var(--pink-dark); font-size: 1.3rem;
+            box-shadow: 0 6px 0 var(--pink-pufi);
+        }
+
+        #back-btn { cursor: pointer; transition: 0.2s; display: none; }
+        #back-btn:hover { background: #fff0f5; }
+
+        /* INTERFATA JOC */
+        #game-ui {
+            position: absolute; top: 40px; left: 50%;
+            transform: translateX(-50%);
+            width: 90%; max-width: 900px;
+            display: none; flex-direction: column; align-items: center;
+            z-index: 100;
+        }
+
+        #question-box {
+            background: white; padding: 40px 70px; border-radius: 50px;
+            border: 6px solid var(--pink-pufi); margin-bottom: 35px;
+            text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+
+        .task-word { font-size: 5.5rem; color: var(--text-color); margin: 15px 0; letter-spacing: 18px; }
+        .hint-text { color: var(--pink-dark); font-size: 1.4rem; }
+
+        #options-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; }
+
+        .option-btn {
+            background: white; border: 4px solid #ffe4ee;
+            padding: 22px 45px; font-size: 2.4rem; border-radius: 35px;
+            cursor: pointer; color: var(--text-color);
+            transition: all 0.2s; font-family: 'Quicksand', sans-serif;
+            box-shadow: 0 8px 0 #ffe4ee;
+        }
+        .option-btn:hover { border-color: var(--pink-pufi); transform: translateY(-4px); }
+        .option-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #ffe4ee; }
+
+        #partial-result { margin-top: 30px; font-size: 3rem; color: var(--pink-dark); height: 70px; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-12px); }
+            40%, 80% { transform: translateX(12px); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="setup-screen">
+    <div class="panel">
+        <h1>GRĂDINA LUI PIGGY</h1>
+        <div style="display:flex; flex-direction:column; gap:25px; margin:35px 0;">
+            <label style="font-size:1.6rem; color:var(--text-color); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:15px;">
+                <input type="radio" name="game-mode" value="litera" checked style="width:28px; height:28px; accent-color: var(--pink-dark);"> LITERĂ LIPSĂ
+            </label>
+            <label style="font-size:1.6rem; color:var(--text-color); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:15px;">
+                <input type="radio" name="game-mode" value="silabe" style="width:28px; height:28px; accent-color: var(--pink-dark);"> PUZZLE SILABE
+            </label>
+        </div>
+        <button class="start-btn" onclick="startGame()">SĂ ÎNCEPEM JOCUL!</button>
+    </div>
+</div>
+
+<div id="top-ui-left">
+    <button id="back-btn" class="ui-pill" onclick="goToMenu()">🏠 MENIU</button>
+    <div class="ui-pill">🌸 FLORI: <span id="score">0</span></div>
+</div>
+
+<canvas id="gardenCanvas"></canvas>
+
+<div id="game-ui">
+    <div id="question-box">
+        <div class="hint-text" id="hint">...</div>
+        <div class="task-word" id="display-word">---</div>
+    </div>
+    <div id="options-container"></div>
+    <div id="partial-result"></div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gardenCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    const rawData = [
+        ["MASĂ", "MA-SĂ"], ["CASĂ", "CA-SĂ"], ["COPIL", "CO-PIL"], ["CAIET", "CA-IET"], ["FLOARE", "FLOA-RE"],
+        ["SOARE", "SOA-RE"], ["APĂ", "A-PĂ"], ["ȘCOALĂ", "ȘCOA-LĂ"], ["CARTE", "CAR-TE"], ["GHIOZDAN", "GHI-OZ-DAN"],
+        ["CREION", "CRE-ION"], ["PENAR", "PE-NAR"], ["BANCĂ", "BAN-CĂ"], ["TABLĂ", "TA-BLĂ"], ["FEREASTRĂ", "FE-REAS-TRĂ"],
+        ["UȘĂ", "U-ȘĂ"], ["PĂDURE", "PĂ-DU-RE"], ["COPAC", "CO-PAC"], ["FRUNZĂ", "FRUN-ZĂ"], ["IARBĂ", "IAR-BĂ"],
+        ["ANIMAL", "A-NI-MAL"], ["PISICĂ", "PI-SI-CĂ"], ["CĂȚEL", "CĂ-ȚEL"], ["PASĂRE", "PA-SĂ-RE"], ["IEPURE", "IE-PU-RE"],
+        ["MĂR", "MĂR"], ["BANANĂ", "BA-NA-NĂ"], ["PORTOCALĂ", "POR-TO-CA-LĂ"], ["CIREȘE", "CI-RE-ȘE"], ["PRUNĂ", "PRU-NĂ"],
+        ["STRUGURE", "STRU-GU-RE"], ["LAPTE", "LAP-TE"], ["PÂINE", "PÂI-NE"], ["MIERE", "MIE-RE"], ["ZAHĂR", "ZA-HĂR"]
+    ];
+
+    let score = 0, selectedMode = "", silabeTarget = [], silabeSelected = [];
+    let flowers = [], clouds = [], grassBlades = [], particles = [], hills = [];
+    let isGameRunning = false;
+    const pufi = { x: 200, y: 0, targetX: 200, color: '#ffb7d5', isJumping: false, frame: 0 };
+
+    function startGame() {
+        selectedMode = document.querySelector('input[name="game-mode"]:checked').value;
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('game-ui').style.display = 'flex';
+        document.getElementById('back-btn').style.display = 'block';
+        if(!isGameRunning) { resize(); requestAnimationFrame(animate); isGameRunning = true; }
+        generateTask();
+    }
+
+    function goToMenu() {
+        document.getElementById('setup-screen').style.display = 'flex';
+        document.getElementById('game-ui').style.display = 'none';
+        document.getElementById('back-btn').style.display = 'none';
+    }
+
+    function generateTask() {
+        const pair = rawData[Math.floor(Math.random() * rawData.length)];
+        const word = pair[0], silabeStr = pair[1];
+        const container = document.getElementById('options-container');
+        container.innerHTML = ""; document.getElementById('partial-result').innerText = "";
+
+        if(selectedMode === "litera") {
+            let idx = Math.floor(Math.random() * word.length);
+            while(word[idx] === ' ' || word[idx] === '-') idx = Math.floor(Math.random() * word.length);
+            document.getElementById('hint').innerText = "CE LITERĂ LIPSEȘTE?";
+            document.getElementById('display-word').innerText = word.substring(0, idx) + "_" + word.substring(idx + 1);
+            let correctChar = word[idx], options = [correctChar];
+            const alpha = "ABCDEFGHIJLMNOPRSTUVZĂÎȘȚÂ";
+            while(options.length < 4) { let r = alpha[Math.floor(Math.random()*alpha.length)]; if(!options.includes(r)) options.push(r); }
+            options.sort(() => Math.random() - 0.5).forEach(opt => {
+                const btn = createBtn(opt); btn.onclick = () => (opt === correctChar) ? success() : fail();
+                container.appendChild(btn);
+            });
+        } else {
+            document.getElementById('hint').innerText = "CONSTRUIEȘTE CUVÂNTUL:";
+            document.getElementById('display-word').innerText = word;
+            silabeTarget = silabeStr.split('-'); silabeSelected = [];
+            let options = [...silabeTarget];
+            while(options.length < 6) { 
+                let rS = rawData[Math.floor(Math.random()*rawData.length)][1].split('-');
+                let r = rS[Math.floor(Math.random()*rS.length)];
+                if(!options.includes(r)) options.push(r);
+            }
+            options.sort(() => Math.random() - 0.5).forEach(opt => {
+                const btn = createBtn(opt);
+                btn.onclick = () => {
+                    if(opt === silabeTarget[silabeSelected.length]) {
+                        silabeSelected.push(opt); document.getElementById('partial-result').innerText = silabeSelected.join('-');
+                        btn.style.visibility = "hidden";
+                        if(silabeSelected.length === silabeTarget.length) setTimeout(success, 300);
+                    } else fail();
+                };
+                container.appendChild(btn);
+            });
+        }
+    }
+
+    function createBtn(text) {
+        const b = document.createElement('button'); b.className = 'option-btn'; b.innerText = text; return b;
+    }
+
+    function success() {
+        score++; document.getElementById('score').innerText = score;
+        pufi.isJumping = true; setTimeout(() => pufi.isJumping = false, 400);
+        for(let i=0; i<15; i++) {
+            particles.push({ x: pufi.x, y: pufi.y - 20, vx: (Math.random()-0.5)*10, vy: -Math.random()*10 - 5, color: `hsl(${Math.random()*360}, 100%, 70%)`, life: 1 });
+        }
+        flowers.push({ x: pufi.x, y: canvas.height - 130, size: 0, maxSize: 40 + Math.random()*30, color: `hsl(${Math.random()*360}, 80%, 75%)`, angle: Math.random()*Math.PI });
+        pufi.targetX += 130; if(pufi.targetX > canvas.width - 200) pufi.targetX = 200;
+        generateTask();
+    }
+
+    function fail() {
+        const box = document.getElementById('question-box'); box.style.animation = "shake 0.4s";
+        setTimeout(() => box.style.animation = "", 400);
+    }
+
+    function resize() {
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        pufi.y = canvas.height - 160;
+        clouds = []; for(let i=0; i<5; i++) clouds.push({ x: Math.random()*canvas.width, y: 80 + Math.random()*100, s: 0.05 + Math.random()*0.1 });
+        hills = [
+            { x: -100, y: canvas.height - 120, w: canvas.width * 0.8, h: 100, c: '#e8f5e9' },
+            { x: canvas.width * 0.4, y: canvas.height - 120, w: canvas.width * 0.8, h: 140, c: '#c8e6c9' }
+        ];
+        grassBlades = []; for(let i=0; i<canvas.width; i+=15) grassBlades.push({ x: i, h: 10+Math.random()*20, c: Math.random() > 0.5 ? '#b8e994' : '#78e08f' });
+    }
+
+    function drawPufi() {
+        pufi.x += (pufi.targetX - pufi.x) * 0.08;
+        const jumpY = pufi.isJumping ? -60 : 0;
+        const bounce = Math.sin(Date.now()/150) * 5;
+        ctx.save(); ctx.translate(pufi.x, pufi.y + jumpY + bounce);
+        
+        // Umbra
+        ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.beginPath(); ctx.ellipse(0, 50 - jumpY - bounce, 40 + (jumpY/2), 10, 0, 0, Math.PI*2); ctx.fill();
+        
+        // Picioare
+        ctx.fillStyle = '#ff85b3'; ctx.fillRect(-22, 30, 12, 20); ctx.fillRect(10, 30, 12, 20);
+        
+        // Corp cu gradient discret (3D Look)
+        let bodyGrad = ctx.createRadialGradient(-10, -10, 5, 0, 0, 50);
+        bodyGrad.addColorStop(0, '#ffcfdf');
+        bodyGrad.addColorStop(1, pufi.color);
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath(); ctx.ellipse(0, 0, 50, 45, 0, 0, Math.PI*2); ctx.fill();
+        
+        // Urechi
+        ctx.fillStyle = pufi.color;
+        ctx.beginPath(); ctx.ellipse(-30, -35, 13, 22, -0.4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(30, -35, 13, 22, 0.4, 0, Math.PI*2); ctx.fill();
+        // Interior urechi
+        ctx.fillStyle = '#ff85b3';
+        ctx.beginPath(); ctx.ellipse(-30, -35, 7, 15, -0.4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(30, -35, 7, 15, 0.4, 0, Math.PI*2); ctx.fill();
+
+        // Ochi
+        ctx.fillStyle = '#333'; ctx.beginPath(); ctx.arc(-18, -8, 7, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(18, -8, 7, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(-16, -10, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(20, -10, 2, 0, Math.PI*2); ctx.fill();
+        
+        // Obrajori
+        ctx.fillStyle = 'rgba(255, 133, 179, 0.3)';
+        ctx.beginPath(); ctx.arc(-28, 5, 8, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(28, 5, 8, 0, Math.PI*2); ctx.fill();
+
+        // Rât
+        ctx.fillStyle = '#ff85b3'; ctx.beginPath(); ctx.roundRect(-16, 5, 32, 22, 12); ctx.fill();
+        ctx.fillStyle = '#d64a7f'; ctx.beginPath(); ctx.arc(-7, 16, 3, 0, Math.PI*2); ctx.arc(7, 16, 3, 0, Math.PI*2); ctx.fill();
+        
+        ctx.restore();
+    }
+
+    function animate() {
+        // Cer Gradient
+        let sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        sky.addColorStop(0, '#87ceeb'); sky.addColorStop(0.5, '#e0f7fa'); sky.addColorStop(1, '#ffffff');
+        ctx.fillStyle = sky; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Soare cu Raze
+        ctx.save();
+        ctx.translate(canvas.width - 100, 100);
+        ctx.fillStyle = "rgba(255, 239, 173, 0.4)";
+        for(let i=0; i<8; i++) {
+            ctx.rotate(Math.PI/4); ctx.fillRect(-5, -80, 10, 160);
+        }
+        ctx.fillStyle = "#ffefad"; ctx.beginPath(); ctx.arc(0, 0, 60, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#fff7d1"; ctx.beginPath(); ctx.arc(0, 0, 45, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+
+        // Dealuri Fundal
+        hills.forEach(h => {
+            ctx.fillStyle = h.c;
+            ctx.beginPath(); ctx.ellipse(h.x + h.w/2, h.y + h.h, h.w/2, h.h, 0, Math.PI, Math.PI*2); ctx.fill();
+        });
+
+        // Nori Leneși
+        clouds.forEach(c => {
+            c.x += c.s; if(c.x > canvas.width + 150) c.x = -150;
+            ctx.fillStyle = "rgba(255,255,255,0.85)";
+            ctx.beginPath(); ctx.arc(c.x, c.y, 35, 0, Math.PI*2); ctx.arc(c.x+40, c.y-15, 45, 0, Math.PI*2); ctx.arc(c.x+85, c.y, 35, 0, Math.PI*2); ctx.fill();
+        });
+
+        // Pamant & Iarba
+        ctx.fillStyle = '#d7ccc8'; ctx.fillRect(0, canvas.height - 130, canvas.width, 130);
+        ctx.fillStyle = '#99d66b'; ctx.fillRect(0, canvas.height - 130, canvas.width, 40);
+        
+        grassBlades.forEach(g => {
+            ctx.fillStyle = g.c;
+            let move = Math.sin(Date.now()/800 + g.x)*4;
+            ctx.beginPath(); ctx.moveTo(g.x, canvas.height-100); ctx.lineTo(g.x+move, canvas.height-100-g.h); ctx.lineTo(g.x+8, canvas.height-100); ctx.fill();
+        });
+
+        flowers.forEach(f => {
+            if(f.size < f.maxSize) f.size += 1.5;
+            // Tulpina
+            ctx.strokeStyle = "#689f38"; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(f.x, canvas.height-110); ctx.lineTo(f.x, canvas.height-110-f.size); ctx.stroke();
+            // Floricica
+            ctx.fillStyle = f.color;
+            for(let i=0; i<6; i++) {
+                let a = (i*Math.PI*2)/6 + Date.now()/1500;
+                ctx.beginPath(); ctx.arc(f.x + Math.cos(a)*f.size/2.5, canvas.height-110-f.size + Math.sin(a)*f.size/2.5, f.size/2.5, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.fillStyle = "#fff176"; ctx.beginPath(); ctx.arc(f.x, canvas.height-110-f.size, f.size/4, 0, Math.PI*2); ctx.fill();
+        });
+
+        particles.forEach((p, i) => {
+            p.x += p.vx; p.y += p.vy; p.vy += 0.4; p.life -= 0.02;
+            ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+            ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
+            if(p.life <= 0) particles.splice(i, 1);
+        });
+        ctx.globalAlpha = 1;
+
+        drawPufi(); requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', resize);
+    resize(); requestAnimationFrame(animate);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>Generator Orar Pro</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --theme: #b98fb7;
+  --grid: #805f9e;
+  --font: Poppins;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font), sans-serif;
+  background: #eef2f7;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* TOP BAR */
+.topbar {
+  display: flex;
+  justify-content: center;
+  background: white;
+  padding: 10px 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* INPUTS */
+.toolbar select,
+.toolbar input,
+.toolbar button {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-family: Poppins;
+  font-size: 13px;
+}
+
+/* BUTTON */
+.toolbar button {
+  background: var(--theme);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+/* LAYOUT */
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* SIDEBAR */
+#subjects {
+  width: 280px;
+  background: white;
+  padding: 15px;
+  overflow-y: auto;
+  border-right: 1px solid #ddd;
+}
+
+.subject {
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 10px;
+  cursor: grab;
+  color: black;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* MAIN */
+#main {
+  flex: 1;
+  padding: 20px;
+  overflow: auto;
+}
+
+/* TABLE */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+th, td {
+  border: 1px solid var(--grid);
+  width: 120px;
+  height: 55px;
+  text-align: center;
+}
+
+th {
+  background: var(--theme);
+  color: white;
+}
+
+td {
+  background: #f9f9f9;
+  cursor: pointer;
+}
+
+td.hover {
+  outline: 2px dashed var(--theme);
+}
+.tool {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.label {
+  font-size: 11px;
+  color: #666;
+}
+
+/* color picker mai "clean pill" */
+input[type="color"] {
+  width: 42px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+}
+
+/* select mai compact */
+select {
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 13px;
+}
+.back-home {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(10px);
+
+  padding: 10px 14px;
+  border-radius: 12px;
+
+  text-decoration: none;
+  font-family: Poppins, sans-serif;
+  font-size: 14px;
+
+  color: #111;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+
+  transition: 0.2s ease;
+  z-index: 9999;
+}
+
+.back-home:hover {
+  transform: translateY(-2px);
+  background: white;
+}
+</style>
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="toolbar">
+
+    <!-- FONT -->
+    <div class="tool">
+      <span class="label">Font</span>
+      <select id="font" onchange="applyStyle()">
+        <option value="Poppins">Poppins</option>
+        <option value="Arial">Arial</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Verdana">Verdana</option>
+      </select>
+    </div>
+
+    <!-- THEME COLOR -->
+    <div class="tool">
+      <span class="label">Culoare orar</span>
+      <input type="color" id="themeColor" value="#b98fb7" onchange="applyStyle()">
+    </div>
+
+    <!-- GRID COLOR -->
+    <div class="tool">
+      <span class="label">Linii tabel</span>
+      <input type="color" id="gridColor" value="#805f9e" onchange="applyStyle()">
+    </div>
+
+    <button onclick="downloadPDF()">Export PDF</button>
+
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="layout">
+
+  <div id="subjects"></div>
+
+  <div id="main">
+    <h2>📅 Orar Școlar</h2>
+    <table id="table"></table>
+  </div>
+
+</div>
+
+<script src="orar.js"></script>
+
+</body>
+<a class="back-home" href="homepage.html">← Acasă</a>
+</html>

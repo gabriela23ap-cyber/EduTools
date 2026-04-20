@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>Generator Etichete Expoziție</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+/* =========================
+   GLOBAL
+========================= */
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: #f4f6fb;
+  display: flex;
+  justify-content: center;   /* 🔥 centrează pe orizontală */
+  align-items: flex-start;   /* aliniere sus */
+  gap: 20px;
+  padding: 30px;
+}
+
+/* =========================
+   LEFT PANEL
+========================= */
+.panel {
+  width: 400px;
+  background: white;
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.panel input,
+.panel textarea {
+  width: 95%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-family: inherit;
+}
+
+.panel button {
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #4f6cff;
+  color: white;
+  font-weight: 500;
+}
+
+/* =========================
+   A4 PAGE
+========================= */
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  background: white;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  border-radius: 10px;
+}
+
+.title {
+  text-align: center;
+  font-size: 20px;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+/* LABEL GRID */
+.labels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0px;
+}
+
+/* LABEL */
+.label {
+  border: 1px dashed #333;
+  padding: 10px;
+  font-size: 11px;
+  min-height: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.label b {
+  font-size: 12px;
+}
+
+/* PRINT */
+@media print {
+  body { background: white; }
+  .panel { display: none; }
+  .page { box-shadow: none; width: 100%; }
+  
+}
+.helper-box {
+  background: #f8f9ff;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid #e0e4ff;
+}
+
+.helper-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.helper-text {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.4;
+}
+.back-home {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(10px);
+
+  padding: 10px 14px;
+  border-radius: 12px;
+
+  text-decoration: none;
+  font-family: Poppins, sans-serif;
+  font-size: 14px;
+
+  color: #111;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+
+  transition: 0.2s ease;
+  z-index: 9999;
+}
+
+.back-home:hover {
+  transform: translateY(-2px);
+  background: white;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- LEFT PANEL -->
+<div class="panel">
+
+  <h2>🎨 Generator Etichete Expoziție</h2>
+
+  <input id="title" placeholder="Titlu expoziție">
+  <div class="helper-box">
+  <div class="helper-title">📝 Cum completezi</div>
+  <div class="helper-text">
+    Introdu fiecare elev pe un rând:<br>
+    <b>Nume / clasa / școala / titlu lucrare</b><br><br>
+    Exemplu:<br>
+    Ana Popescu / a II-a A / Școala Nr.1 / Flori<br>
+    Popa Marian / a V-a B / Școala "Vasile Alecsandri" / Peisaj
+  </div>
+</div>
+
+  <textarea id="students" rows="8"
+    placeholder="Ana Popescu / a II-a A / Școala Nr.1 / Flori"></textarea>
+
+  <button onclick="generate()">✨ Generează etichete</button>
+  <button onclick="sortNames()">🔤 Sortează alfabetic</button>
+
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="page">
+
+  <div class="labels" id="labels"></div>
+
+</div>
+
+<!-- 🔴 IMPORTANT: legătura cu JS -->
+<script src="etichete.js"></script>
+
+</body>
+<a class="back-home" href="homepage.html">← Acasă</a>
+</html>

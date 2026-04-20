@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>Crossword Worksheet</title>
+
+<!-- FONT PREMIUM -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+/* =========================
+   GLOBAL
+========================= */
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: #f4f6fb;
+  display: flex;
+  justify-content: center;   /* 🔥 centrează pe orizontală */
+  align-items: flex-start;   /* aliniere sus */
+  gap: 20px;
+  padding: 30px;
+}
+
+/* =========================
+   LEFT PANEL (MODERN CARD)
+========================= */
+.panel {
+  width: 320px;
+  background: white;
+  padding: 18px;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel input,
+.panel textarea {
+  width: 90%;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  font-family: inherit;
+  outline: none;
+  transition: 0.2s;
+}
+
+.panel input:focus,
+.panel textarea:focus {
+  border-color: #6c8cff;
+  box-shadow: 0 0 0 3px rgba(108,140,255,0.15);
+}
+
+/* BUTTONS */
+.panel button {
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.panel button:first-of-type {
+  background: linear-gradient(135deg, #6c8cff, #4f6cff);
+  color: white;
+}
+
+.panel button:last-of-type {
+  background: #f0f3ff;
+  color: #333;
+}
+
+.panel button:hover {
+  transform: translateY(-2px);
+}
+
+/* =========================
+   A4 PAGE (PREMIUM PAPER LOOK)
+========================= */
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  background: white;
+  padding: 35px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+  border-radius: 6px;
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #444;
+}
+
+/* TITLE */
+.title {
+  text-align: center;
+  font-size: 24px;
+  margin: 15px 0;
+  font-weight: 600;
+  color: #222;
+}
+
+/* =========================
+   GRID (CLEAN & PREMIUM)
+========================= */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(21, 32px);
+  justify-content: center;
+  margin-top: 25px;
+}
+
+.cell {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 600;
+  background: #fff;
+  transition: 0.15s;
+}
+
+.cell:hover {
+  background: #f5f7ff;
+}
+
+/* =========================
+   QUESTIONS
+========================= */
+.questions {
+  margin-top: 25px;
+  font-size: 13px;
+  color: #333;
+}
+
+.questions b {
+  color: #4f6cff;
+}
+
+/* optional hidden letters */
+.hiddenLetter {
+  color: transparent;
+}
+.back-home {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(10px);
+
+  padding: 10px 14px;
+  border-radius: 12px;
+
+  text-decoration: none;
+  font-family: Poppins, sans-serif;
+  font-size: 14px;
+
+  color: #111;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+
+  transition: 0.2s ease;
+  z-index: 9999;
+}
+
+.back-home:hover {
+  transform: translateY(-2px);
+  background: white;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- LEFT PANEL -->
+<div class="panel">
+
+  <input id="titleInput" placeholder="Titlu fișă de lucru">
+
+  <textarea id="wordsInput" rows="8"
+    placeholder="1. cuvant1
+2. cuvant2
+3. cuvant3"></textarea>
+
+  <textarea id="cluesInput" rows="8"
+    placeholder="1. întrebare pentru cuvant1
+2. întrebare pentru cuvant2
+3. întrebare pentru cuvant3"></textarea>
+
+  <button onclick="generate()">✨ Generează fișa</button>
+
+  <button onclick="toggleAnswers()">👁 Afișează / Ascunde</button>
+
+</div>
+
+<!-- RIGHT A4 -->
+<div class="page">
+
+  <div class="header">
+    <div>Nume elev: __________</div>
+    <div>Data: __________</div>
+  </div>
+
+  <div class="title" id="titleOut"></div>
+
+  <div id="grid" class="grid"></div>
+
+  <div id="questions" class="questions"></div>
+
+</div>
+
+<script src="crossword.js"></script>
+
+</body>
+<a class="back-home" href="homepage.html">← Acasă</a>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>Generator diplomă</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --main: #4d96ff;
+  --font: Poppins;
+}
+
+body {
+  
+  margin: 0;
+  font-family: var(--font);
+  display: flex;
+  height: 100vh;
+  background: linear-gradient(135deg, #eef2f7, #d9e2ec);
+}
+
+/* PANEL */
+.panel {
+  width: 340px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(12px);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-right: 1px solid #ddd;
+}
+
+input, select {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-family: Poppins;
+  font-size: 13px;
+}
+
+/* BUTTON */
+button {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: var(--main);
+  color: white;
+  cursor: pointer;
+}
+
+/* PREVIEW */
+.preview {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* REAL BACKGROUND (NU EMOJI) */
+.bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top, rgba(77,150,255,0.25), transparent 60%),
+              radial-gradient(circle at bottom, rgba(255,200,0,0.15), transparent 60%);
+  z-index: 0;
+}
+
+/* floating shapes */
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.15;
+  animation: float 10s infinite ease-in-out;
+}
+
+.shape:nth-child(1) { width: 120px; height: 120px; background: #4d96ff; top: 10%; left: 10%; }
+.shape:nth-child(2) { width: 80px; height: 80px; background: #ff6b6b; top: 60%; left: 20%; }
+.shape:nth-child(3) { width: 140px; height: 140px; background: #6bcB77; top: 30%; right: 10%; }
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+/* DIPLOMA */
+.diploma {
+  width: 850px;
+  height: 600px;
+  background: white;
+  border-radius: 18px;
+  padding: 50px;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+/* BORDER */
+.border {
+  position: absolute;
+  inset: 18px;
+  border: 4px solid var(--main);
+  border-radius: 15px;
+  transition: 0.3s ease;
+}
+
+/* VARIANTE */
+
+.border.solid {
+  border-style: solid;
+}
+
+.border.dashed {
+  border-style: dashed;
+}
+
+.border.dotted {
+  border-style: dotted;
+}
+
+.border.double {
+  border-style: double;
+  border-width: 6px;
+}
+
+/* varianta „soft premium” */
+.border.soft {
+  border: none;
+  box-shadow: 0 0 0 4px var(--main), 0 0 20px rgba(0,0,0,0.08);
+  border-radius: 18px;
+}
+
+/* TITLE */
+.title {
+  text-align: center;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--main);
+}
+
+/* CONTENT */
+.content {
+  margin-top: 30px;
+  text-align: center;
+  font-size: 18px;
+  line-height: 2;
+}
+
+.line {
+  display: inline-block;
+  min-width: 180px;
+  border-bottom: 2px dotted #999;
+}
+
+/* SIGN */
+.sign {
+  position: absolute;
+  bottom: 50px;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  font-size: 14px;
+  text-align: center;
+}
+.back-home {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(10px);
+
+  padding: 10px 14px;
+  border-radius: 12px;
+
+  text-decoration: none;
+  font-family: Poppins, sans-serif;
+  font-size: 14px;
+
+  color: #111;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+
+  transition: 0.2s ease;
+  z-index: 9999;
+}
+
+.back-home:hover {
+  transform: translateY(-2px);
+  background: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="panel">
+
+  <h3>🎓 Generator diplomă</h3>
+
+
+  <select onchange="setTheme(this.value)">
+    <option value="#4d96ff">Blue</option>
+    <option value="#ff6b6b">Red</option>
+    <option value="#6bcB77">Green</option>
+    <option value="#f7b801">Yellow</option>
+  </select>
+
+  <select onchange="setBorder(this.value)">
+  <option value="solid">Linie continuă</option>
+  <option value="dashed">Linie punctată</option>
+  <option value="dotted">Linie fin punctată</option>
+  <option value="double">Linie dublă</option>
+  <option value="soft">Soft (glow)</option>
+</select>
+
+  <input id="name" placeholder="Nume elev">
+  <input id="class" placeholder="Clasa">
+  <input id="school" placeholder="Școala">
+  <input id="city" placeholder="Localitate">
+  <input id="reason" placeholder="Motiv">
+
+  <input id="director" placeholder="Director">
+  <input id="teacher" placeholder="Profesor">
+
+  <button onclick="downloadPDF()">Descarcă PDF</button>
+
+</div>
+
+<div class="preview">
+
+  <!-- BACKGROUND REAL -->
+  <div class="bg">
+    <div class="shape"></div>
+    <div class="shape"></div>
+    <div class="shape"></div>
+  </div>
+
+  <!-- DIPLOMA -->
+  <div id="diploma" class="diploma">
+
+    <div class="border"></div>
+
+    <div class="title">DIPLOMĂ</div>
+
+    <div class="content">
+      Se acordă elevului/ei<br>
+      <b id="outName" class="line"></b><br>
+
+      din clasa <b id="outClass" class="line"></b><br>
+      Școala <b id="outSchool" class="line"></b><br>
+      Localitatea <b id="outCity" class="line"></b><br><br>
+
+      pentru <b id="outReason" class="line"></b>
+    </div>
+
+    <div class="sign">
+      <div>Director<br><span id="outDir"></span></div>
+      <div>Profesor<br><span id="outTeach"></span></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="diploma.js"></script>
+
+</body>
+<a class="back-home" href="homepage.html">← Acasă</a>
+</html>

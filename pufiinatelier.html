@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pufi în Atelierul de Culori</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pufi-pink: #ffb7d5;
+            --pufi-dark: #ff85b3;
+            --wood: #5d4037;
+            --canvas-bg: #fdfaf5;
+            --accent-gold: #d4af37;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: 'Quicksand', sans-serif; overflow: hidden;
+            background-color: var(--canvas-bg);
+        }
+
+        canvas { display: block; cursor: crosshair; }
+
+        /* UI STRATIFICAT */
+        #game-overlay {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column; align-items: center;
+            pointer-events: none; z-index: 10;
+        }
+
+        /* CARDUL DE INTREBARE */
+        #question-card {
+            margin-top: 5vh; width: 90%; max-width: 650px;
+            background: white; padding: 30px; border-radius: 30px;
+            border: 5px solid var(--wood); box-shadow: 0 15px 0 rgba(0,0,0,0.1);
+            text-align: center; pointer-events: auto;
+            transform: rotate(-1deg);
+        }
+
+        h2 { color: var(--wood); font-size: 1.8rem; margin: 0 0 20px 0; }
+
+        /* BUTOANE RASPUNS */
+        .options-container {
+            display: grid; grid-template-columns: 1fr; gap: 12px;
+        }
+
+        .option-btn {
+            background: #fff; border: 3px solid #eee; padding: 15px 25px;
+            border-radius: 20px; font-family: 'Quicksand'; font-size: 1.2rem;
+            font-weight: 700; color: var(--wood); cursor: pointer;
+            transition: all 0.2s; box-shadow: 0 5px 0 #eee;
+        }
+
+        .option-btn:hover { border-color: var(--pufi-dark); transform: scale(1.02); }
+        .option-btn:active { transform: translateY(5px); box-shadow: 0 0 0 #eee; }
+
+        /* SCOR SI ETICHETA */
+        .score-box {
+            position: absolute; top: 20px; left: 20px;
+            background: var(--pufi-pink); padding: 10px 20px;
+            border-radius: 15px; border: 3px solid var(--wood);
+            font-weight: 700; color: var(--wood);
+        }
+
+        /* ECRAN START */
+        #start-screen {
+            position: fixed; inset: 0; background: var(--canvas-bg);
+            z-index: 100; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; pointer-events: auto;
+        }
+
+        .play-button {
+            padding: 25px 60px; font-size: 2rem; background: var(--pufi-dark);
+            color: white; border: none; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 10px 0 #d64a7f; transition: 0.2s;
+        }
+        .play-button:active { transform: translateY(10px); box-shadow: 0 0 0 #d64a7f; }
+    </style>
+</head>
+<body>
+
+<div id="start-screen">
+    <h1 style="color: var(--wood); font-size: 3rem; margin-bottom: 30px;">ATELIERUL LUI PUFI</h1>
+    <button class="play-button" onclick="initGame()">JOACĂ</button>
+</div>
+
+<div id="game-overlay" style="display: none;">
+    <div class="score-box">SCOR: <span id="score-val">0</span></div>
+    
+    <div id="question-card">
+        <h2 id="question-text">Incarcam intrebarea...</h2>
+        <div class="options-container" id="options"></div>
+    </div>
+</div>
+
+<canvas id="stage"></canvas>
+
+<script>
+    const canvas = document.getElementById('stage');
+    const ctx = canvas.getContext('2d');
+    let score = 0;
+    let particles = [];
+
+    const questions = [
+        { q: "Ce culoare obținem din ALB + NEGRU?", a: ["GRI", "MARO", "ALBASTRU"], c: 0 },
+        { q: "Cum formăm culoarea MOV?", a: ["ROȘU + VERDE", "ALBASTRU + ROȘU", "GALBEN + ALB"], c: 1 },
+        { q: "Care dintre acestea este o CULOARE CALDĂ?", a: ["ALBASTRU", "VERDE", "PORTOCALIU"], c: 2 },
+        { q: "Ce obținem dacă amestecăm GALBEN + ALBASTRU?", a: ["MOV", "VERDE", "ROȘU"], c: 1 },
+        { q: "Cum obținem culoarea ROZ?", a: ["ROȘU + ALB", "ROȘU + NEGRU", "MOV + GALBEN"], c: 0 },
+        { q: "Care este culoarea opusă (complementară) lui ROȘU?", a: ["VERDE", "GALBEN", "MOV"], c: 0 }
+    ];
+
+    const pufi = {
+        x: 0, y: 0, 
+        baseY: 0,
+        jump: 0,
+        targetX: 0,
+        wiggle: 0
+    };
+
+    function initGame() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('game-overlay').style.display = 'flex';
+        resize();
+        pufi.x = canvas.width * 0.2;
+        pufi.targetX = canvas.width * 0.2;
+        loadQuestion();
+        animate();
+    }
+
+    function loadQuestion() {
+        const data = questions[Math.floor(Math.random() * questions.length)];
+        document.getElementById('question-text').innerText = data.q;
+        const container = document.getElementById('options');
+        container.innerHTML = '';
+
+        data.a.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => {
+                if(i === data.c) handleCorrect();
+                else handleWrong(btn);
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function handleCorrect() {
+        score++;
+        document.getElementById('score-val').innerText = score;
+        pufi.jump = 1;
+        createSplatter();
+        setTimeout(loadQuestion, 500);
+    }
+
+    function handleWrong(btn) {
+        btn.style.backgroundColor = "#ffcdd2";
+        btn.style.borderColor = "#f44336";
+        setTimeout(() => {
+            btn.style.backgroundColor = "#fff";
+            btn.style.borderColor = "#eee";
+        }, 300);
+    }
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        pufi.baseY = canvas.height * 0.85;
+    }
+
+    function createSplatter() {
+        for(let i=0; i<15; i++) {
+            particles.push({
+                x: pufi.x + 50, y: pufi.baseY - 50,
+                vx: (Math.random()-0.5)*20, vy: -Math.random()*15 - 5,
+                r: Math.random()*10 + 5,
+                color: `hsl(${Math.random()*360}, 70%, 60%)`,
+                life: 1
+            });
+        }
+    }
+
+    function drawAtelier() {
+        // Podeaua de lemn
+        ctx.fillStyle = "#e0d3c1";
+        ctx.fillRect(0, canvas.height - 180, canvas.width, 180);
+        ctx.fillStyle = "#d4c4ae";
+        for(let i=0; i<canvas.width; i+=120) ctx.fillRect(i, canvas.height-180, 4, 180);
+
+        // Șevalet (decor lateral)
+        ctx.strokeStyle = varColor('--wood'); ctx.lineWidth = 12; ctx.lineCap = 'round';
+        const sx = canvas.width * 0.85;
+        ctx.beginPath(); ctx.moveTo(sx, canvas.height-400); ctx.lineTo(sx-60, canvas.height-50);
+        ctx.moveTo(sx, canvas.height-400); ctx.lineTo(sx+60, canvas.height-50); ctx.stroke();
+        ctx.fillStyle = "white"; ctx.fillRect(sx-80, canvas.height-350, 160, 120);
+        ctx.strokeRect(sx-80, canvas.height-350, 160, 120);
+
+        // Pensule într-un borcan
+        ctx.fillStyle = "#aab"; ctx.fillRect(sx-180, canvas.height-120, 40, 50);
+        ctx.fillStyle = varColor('--wood'); ctx.fillRect(sx-175, canvas.height-200, 8, 80);
+        ctx.fillRect(sx-160, canvas.height-210, 8, 90);
+    }
+
+    function drawPufi() {
+        pufi.wiggle = Math.sin(Date.now()*0.005) * 5;
+        if(pufi.jump > 0) {
+            pufi.jump -= 0.05;
+            var jumpY = Math.sin(pufi.jump * Math.PI) * 100;
+        } else { var jumpY = 0; }
+
+        ctx.save();
+        ctx.translate(pufi.x, pufi.baseY - jumpY);
+        
+        // Umbra
+        ctx.fillStyle = "rgba(0,0,0,0.1)";
+        ctx.beginPath(); ctx.ellipse(0, 30 + jumpY, 50 - jumpY/4, 10, 0, 0, Math.PI*2); ctx.fill();
+
+        // Corp Pufi
+        ctx.fillStyle = varColor('--pufi-pink');
+        ctx.beginPath(); ctx.ellipse(0, 0, 60, 55, 0, 0, Math.PI*2); ctx.fill();
+
+        // Bereta Neagră
+        ctx.fillStyle = "#222";
+        ctx.beginPath(); ctx.ellipse(5, -48, 45, 18, 0.2, 0, Math.PI*2); ctx.fill();
+        ctx.fillRect(15, -65, 4, 12);
+
+        // Ochi
+        ctx.fillStyle = "#333";
+        ctx.beginPath(); ctx.arc(-20, -10, 8, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(20, -10, 8, 0, Math.PI*2); ctx.fill();
+
+        // Rat
+        ctx.fillStyle = varColor('--pufi-dark');
+        ctx.beginPath(); ctx.roundRect(-18, 10, 36, 22, 10); ctx.fill();
+
+        ctx.restore();
+    }
+
+    function animate() {
+        ctx.fillStyle = varColor('--canvas-bg');
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        drawAtelier();
+
+        // Particule
+        particles.forEach((p, i) => {
+            p.x += p.vx; p.y += p.vy; p.vy += 0.6; p.life -= 0.02;
+            ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+            if(p.life <= 0) particles.splice(i, 1);
+        });
+        ctx.globalAlpha = 1;
+
+        drawPufi();
+        requestAnimationFrame(animate);
+    }
+
+    function varColor(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    window.addEventListener('resize', resize);
+</script>
+
+</body>
+</html>
